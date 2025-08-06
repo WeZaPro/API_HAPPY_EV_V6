@@ -7,7 +7,7 @@ const { authJwt } = require("../middlewares");
 
 router.post(
   "/",
-  [authJwt.verifyToken, authJwt.isAdmin],
+  // [authJwt.verifyToken, authJwt.isAdmin],
   staffDriver.create_staffDriver
 );
 router.get(
