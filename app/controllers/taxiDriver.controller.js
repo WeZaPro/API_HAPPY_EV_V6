@@ -289,87 +289,6 @@ exports.handleLineWebhook = async (req, res) => {
     for (const event of events) {
       const line_user_id = event.source.userId;
 
-      // เช็คผู้ใช้ลงทะเบียนหรือยัง (ทำก่อน เพื่อใช้งานได้ทั้ง message และ postback)
-      const driver = await TaxiDriver.findOne({ where: { line_user_id } });
-
-      // กรณียังไม่ลงทะเบียน (ไม่ว่าจะส่ง message หรือ postback)
-      if (!driver) {
-        // ส่ง Flex message ชวนลงทะเบียน
-        const LIFF_URL_USE = `${process.env.LIFF_URL}?line_user_id=${line_user_id}`;
-        console.log("❌ ไม่พบ line_user_id นี้ในฐานข้อมูล");
-        console.log("🔗 LIFF_URL_USE:", LIFF_URL_USE);
-
-        await axios.post(
-          "https://api.line.me/v2/bot/message/reply",
-          {
-            replyToken: event.replyToken,
-            messages: [
-              {
-                type: "flex",
-                altText: "กรุณาลงทะเบียนเป็นคนขับแท็กซี่",
-                contents: {
-                  type: "bubble",
-                  size: "mega",
-                  hero: {
-                    type: "image",
-                    url: "https://chs.westwind.ab.ca/uploads/1259/registrationicon.png",
-                    size: "full",
-                    aspectRatio: "20:13",
-                    aspectMode: "cover",
-                  },
-                  body: {
-                    type: "box",
-                    layout: "vertical",
-                    spacing: "md",
-                    contents: [
-                      {
-                        type: "text",
-                        text: "คุณยังไม่ได้ลงทะเบียน",
-                        weight: "bold",
-                        size: "lg",
-                        wrap: true,
-                      },
-                      {
-                        type: "text",
-                        text: "กรุณากดปุ่มด้านล่างเพื่อไปยังหน้า LIFF App",
-                        size: "sm",
-                        color: "#666666",
-                        wrap: true,
-                      },
-                    ],
-                  },
-                  footer: {
-                    type: "box",
-                    layout: "vertical",
-                    spacing: "sm",
-                    contents: [
-                      {
-                        type: "button",
-                        style: "primary",
-                        color: "#0F8B8D",
-                        action: {
-                          type: "uri",
-                          label: "ลงทะเบียนตอนนี้",
-                          uri: LIFF_URL_USE,
-                        },
-                      },
-                    ],
-                  },
-                },
-              },
-            ],
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-
-        continue; // ข้ามไปรอบถัดไปของ for
-      }
-
       // กรณี event เป็น postback
       if (event.type === "postback") {
         const postbackData = event.postback?.data || "";
@@ -507,6 +426,25 @@ exports.handleLineWebhook = async (req, res) => {
       // กรณี event เป็นข้อความ (message)
       if (event.type === "message" && event.message.type === "text") {
         const userText = (event.message.text || "").toLowerCase();
+
+        //todo test start
+        if (userText === "wee") {
+          await axios.post(
+            "https://api.line.me/v2/bot/message/reply",
+            {
+              replyToken: event.replyToken,
+              messages: [{ type: "text", text: "สวัสดี wee" }],
+            },
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          continue;
+        }
+        //todo test end
 
         if (userText.includes("ยืนยันงานแล้ว")) {
           console.log(
