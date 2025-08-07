@@ -51,107 +51,6 @@ exports.create_byAdmin = async (req, res) => {
   }
 };
 
-// exports.assignStaffToTaxiDriver = async (req, res) => {
-//   try {
-//     const { phone, taxi_id } = req.body;
-
-//     if (!phone || !taxi_id) {
-//       return res.status(400).send({ message: "กรุณาระบุ phone และ taxi_id" });
-//     }
-
-//     // 🔍 หา staffDriver จากเบอร์โทร
-//     const staff = await StaffDriver.findOne({ where: { phone } });
-
-//     if (!staff) {
-//       return res
-//         .status(404)
-//         .send({ message: "ไม่พบพนักงานขับรถจากเบอร์ที่ระบุ" });
-//     }
-
-//     // ✅ อัปเดต taxiDriver ด้วยข้อมูลจาก staffDriver
-//     const [updatedCount] = await TaxiDriver.update(
-//       {
-//         link_staff_id: staff.staffDriver_id,
-//         driver: staff.driver,
-//         phone: staff.phone,
-//         line_name: staff.line_name,
-//         line_user_id: staff.line_user_id,
-//       },
-//       {
-//         where: { taxi_id },
-//       }
-//     );
-
-//     if (updatedCount === 0) {
-//       return res.status(404).send({ message: "ไม่พบ taxiDriver ที่ระบุ" });
-//     }
-
-//     return res
-//       .status(200)
-//       .send({ message: "อัปเดตข้อมูลคนขับสำเร็จ", staff_linked: staff });
-//   } catch (error) {
-//     console.error("❌ Error assigning staff to taxiDriver:", error);
-//     res.status(500).send({ message: "เกิดข้อผิดพลาด", error: error.message });
-//   }
-// };
-
-// exports.create_byDriver = async (req, res) => {
-//   try {
-//     const taxi_id = `Ta-${String(Date.now()).slice(-6)}`;
-//     const { driver, phone, line_name, line_user_id } = req.body;
-
-//     // console.log("TaxiDriver line_user_id: ", line_user_id);
-
-//     // 🔍 ตรวจสอบว่ามี line_user_id นี้แล้วหรือยัง
-//     const existingDriver = await StaffDriver.findOne({
-//       where: { line_user_id },
-//     });
-
-//     if (existingDriver) {
-//       // console.log`บัญชีนี้ลงทะเบียนแล้ว (line_user_id: ${line_user_id})`;
-//       return res.status(400).send({
-//         message: `บัญชีนี้ลงทะเบียนแล้ว (line_user_id: ${line_user_id})`,
-//       });
-//     }
-
-//     // ถ้ายังไม่มีให้สร้างใหม่
-//     const newDriver = await TaxiDriver.create({
-//       taxi_id,
-//       taxi_lpr,
-//       driver,
-//       phone,
-//       line_name,
-//       line_user_id,
-//     });
-
-//     res.status(201).send(newDriver);
-//   } catch (err) {
-//     console.error("🔥 Sequelize error: ", err);
-//     res.status(500).send({ message: err.message, error: err.errors });
-//   }
-// };
-
-// exports.create_byDriver = async (req, res) => {
-//   try {
-//     const taxi_id = `Ta-${String(Date.now()).slice(-6)}`;
-//     // console.log("LIFF URL being sent:", liffUrl);
-//     const { taxi_lpr, driver, phone, line_name, line_user_id } = req.body;
-//     const newDriver = await TaxiDriver.create({
-//       taxi_id,
-//       taxi_lpr,
-//       driver,
-//       phone,
-//       line_name,
-//       line_user_id,
-//     });
-
-//     res.status(201).send(newDriver);
-//   } catch (err) {
-//     console.error("🔥 Sequelize error: ", err);
-//     res.status(500).send({ message: err.message, error: err.errors });
-//   }
-// };
-
 // Get all drivers
 
 exports.assignStaffToTaxiDriver = async (req, res) => {
@@ -221,6 +120,24 @@ exports.findAll = async (req, res) => {
   }
 };
 
+exports.findByLineUserId = async (req, res) => {
+  const { lineId } = req.params;
+
+  try {
+    const drivers = await TaxiDriver.findAll({
+      where: { line_user_id: lineId }, // ชื่อฟิลด์ในตารางต้องเป็น lineId
+    });
+
+    if (drivers.length === 0) {
+      return res.status(404).json({ message: "ไม่พบข้อมูล" });
+    }
+
+    res.json(drivers);
+  } catch (error) {
+    console.error("❌ Error:", error);
+    res.status(500).json({ message: "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์" });
+  }
+};
 // Update driver by id
 
 exports.update = async (req, res) => {
